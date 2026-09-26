@@ -1,1 +1,571 @@
-work is in progress
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AK Image Resizer</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#161a21; --panel2:#1d222b; --line:#2a303b;
+    --txt:#e9edf4; --muted:#8f9aad; --accent:#4f8cff; --accent2:#7c5cff;
+    --ok:#2ecc71; --warn:#ffb020; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- top bar ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:rgba(15,17,21,.85);
+    backdrop-filter:blur(12px); z-index:20;
+  }
+  .brand{font-weight:700; letter-spacing:.2px; display:flex; align-items:center; gap:9px}
+  .brand .dot{
+    width:22px;height:22px;border-radius:7px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  header small{color:var(--muted); font-weight:400}
+
+  /* ---------- layout ---------- */
+  .layout{
+    display:grid; grid-template-columns:minmax(0,1fr) 390px;
+    gap:22px; padding:22px; align-items:start; max-width:1500px; margin:0 auto;
+  }
+  @media (max-width:1000px){ .layout{grid-template-columns:1fr; padding:14px; gap:14px} }
+
+  /* ---------- stage ---------- */
+  .stage{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); overflow:hidden; min-height:420px;
+    display:flex; flex-direction:column;
+  }
+  .dropzone{
+    flex:1; display:grid; place-items:center; text-align:center;
+    padding:48px 24px; cursor:pointer; transition:.18s;
+    border:2px dashed transparent; margin:14px; border-radius:12px;
+  }
+  .dropzone:hover, .dropzone.over{border-color:var(--accent); background:rgba(79,140,255,.06)}
+  .dz-icon{
+    width:56px;height:56px;margin:0 auto 16px;border-radius:16px;
+    display:grid;place-items:center;font-size:24px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  .dropzone h3{margin:0 0 6px; font-size:18px}
+  .dropzone p{margin:0; color:var(--muted); font-size:13.5px}
+
+  .workspace{display:flex; flex-direction:column; flex:1; min-height:0}
+  .ws-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 14px; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .fname{color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .canvas-wrap{
+    flex:1; display:grid; place-items:center; padding:22px; overflow:auto;
+    background-color:#1a1d24;
+    background-image:
+      linear-gradient(45deg,#22262f 25%,transparent 25%),
+      linear-gradient(-45deg,#22262f 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#22262f 75%),
+      linear-gradient(-45deg,transparent 75%,#22262f 75%);
+    background-size:20px 20px;
+    background-position:0 0,0 10px,10px -10px,-10px 0;
+  }
+  canvas#out{
+    max-width:100%; max-height:62vh;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+    image-rendering:auto;
+  }
+  .readout{
+    padding:10px 14px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums;
+  }
+  .readout b{color:var(--txt); font-weight:600}
+
+  /* ---------- panel ---------- */
+  .panel{display:flex; flex-direction:column; gap:14px}
+  .card{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:16px;
+  }
+  .card h2{
+    margin:0 0 14px; font-size:12px; text-transform:uppercase;
+    letter-spacing:.9px; color:var(--muted); font-weight:600;
+  }
+  .field{display:block; margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field > span{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; color:var(--muted); margin-bottom:7px;
+  }
+  .field > span b{color:var(--txt); font-weight:600; font-variant-numeric:tabular-nums}
+
+  select, input[type=number]{
+    width:100%; padding:9px 11px; border-radius:9px;
+    background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    font-size:14px; font-family:inherit; outline:none; transition:.15s;
+  }
+  select:focus, input[type=number]:focus{border-color:var(--accent)}
+  input[type=number]{font-variant-numeric:tabular-nums}
+
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:4px; border-radius:4px;
+    background:var(--panel2); outline:none; margin:6px 0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px;height:16px;border-radius:50%;
+    background:var(--accent); cursor:pointer; border:2px solid #0f1115;
+    box-shadow:0 0 0 1px var(--accent);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;background:var(--accent);
+    cursor:pointer;border:2px solid #0f1115;
+  }
+
+  .switch{display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; user-select:none}
+  .switch input{
+    -webkit-appearance:none; appearance:none; width:38px;height:22px;border-radius:99px;
+    background:var(--panel2); border:1px solid var(--line); position:relative;
+    cursor:pointer; transition:.18s; flex:none;
+  }
+  .switch input::after{
+    content:''; position:absolute; top:2px; left:2px; width:16px;height:16px;
+    border-radius:50%; background:var(--muted); transition:.18s;
+  }
+  .switch input:checked{background:var(--accent); border-color:var(--accent)}
+  .switch input:checked::after{left:18px; background:#fff}
+
+  .sub{margin-top:14px; padding-top:14px; border-top:1px dashed var(--line)}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .inline{display:flex; gap:8px; align-items:center}
+  .inline input{flex:1}
+  .inline .unit{font-size:13px; color:var(--muted)}
+
+  .segmented{display:flex; background:var(--panel2); border-radius:9px; padding:3px; gap:3px}
+  .segmented button{
+    flex:1; padding:7px; border:0; border-radius:7px; background:transparent;
+    color:var(--muted); font:inherit; font-size:13px; cursor:pointer; transition:.15s;
+  }
+  .segmented button.active{background:var(--accent); color:#fff}
+
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:12px}
+  .chips button{
+    padding:6px 11px; border-radius:8px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--muted); font:inherit; font-size:12.5px;
+    cursor:pointer; transition:.15s;
+  }
+  .chips button:hover{border-color:var(--accent); color:var(--txt)}
+
+  .btn{
+    padding:10px 16px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--txt); font:inherit; font-weight:600;
+    font-size:14px; cursor:pointer; transition:.15s;
+  }
+  .btn:hover:not(:disabled){border-color:var(--accent)}
+  .btn:disabled{opacity:.45; cursor:not-allowed}
+  .btn.primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border:0; color:#fff;
+  }
+  .btn.primary:hover:not(:disabled){filter:brightness(1.1)}
+  .btn.sm{padding:6px 12px; font-size:12.5px}
+  .btn.ghost{background:transparent}
+
+  .actions{display:flex; gap:10px; position:sticky; bottom:14px}
+  .actions .btn{flex:1}
+
+  .hint{font-size:12px; color:var(--muted); margin:10px 0 0; line-height:1.55}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed; bottom:26px; left:50%; transform:translate(-50%,20px);
+    background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    padding:11px 18px; border-radius:10px; font-size:13.5px;
+    opacity:0; pointer-events:none; transition:.25s; z-index:100;
+    box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  #toast.show{opacity:1; transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="dot"></span> Image Resizer</div>
+  <small>100% in your browser · nothing is uploaded</small>
+</header>
+
+<div class="layout">
+
+  <!-- ================= STAGE ================= -->
+  <section class="stage">
+    <div class="dropzone" id="dropzone">
+      <div>
+        <div class="dz-icon">⬆</div>
+        <h3>Drop an image here</h3>
+        <p>or click to browse · PNG, JPG, WebP, GIF, BMP, SVG<br>you can also paste with Ctrl / ⌘ + V</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" hidden>
+    </div>
+
+    <div class="workspace" id="workspace" hidden>
+      <div class="ws-bar">
+        <span class="fname" id="fileName"></span>
+        <button class="btn ghost sm" id="changeBtn">Change image</button>
+      </div>
+      <div class="canvas-wrap"><canvas id="out"></canvas></div>
+      <div class="readout" id="readout">—</div>
+    </div>
+  </section>
+
+  <!-- ================= PANEL ================= -->
+  <aside class="panel">
+
+    <!-- 1. FORMAT -->
+    <section class="card">
+      <h2>1 · Format &amp; quality</h2>
+
+      <label class="field">
+        <span>Output format</span>
+        <select id="format">
+          <option value="png">PNG — lossless, keeps transparency</option>
+          <option value="jpeg">JPG — smallest, no transparency</option>
+          <option value="webp">WebP — modern, small + transparent</option>
+        </select>
+      </label>
+
+      <label class="field" id="qualityField">
+        <span>Quality <b id="qualityVal">92%</b></span>
+        <input type="range" id="quality" min="10" max="100" value="92">
+      </label>
+
+      <label class="field">
+        <span>Target file size (optional)</span>
+        <div class="inline">
+          <input type="number" id="targetKB" min="1" placeholder="e.g. 100">
+          <span class="unit">KB</span>
+          <button class="btn ghost sm" id="fitBtn">Fit</button>
+        </div>
+      </label>
+    </section>
+
+    <!-- 2. BACKGROUND -->
+    <section class="card">
+      <h2>2 · Background</h2>
+
+      <label class="switch">
+        <input type="checkbox" id="removeBg">
+        <span>Remove background</span>
+      </label>
+
+      <div class="sub" id="bgOpts" hidden>
+        <label class="field">
+          <span>Tolerance <b id="tolVal">35</b></span>
+          <input type="range" id="tolerance" min="1" max="150" value="35">
+        </label>
+        <label class="field">
+          <span>Edge softness <b id="featherVal">1</b></span>
+          <input type="range" id="feather" min="0" max="4" value="1">
+        </label>
+        <p class="hint">
+          Floods inward from the edges and erases everything similar to the border
+          colour. Perfect for signatures, scans and product shots on a flat
+          background. Raise the tolerance if leftovers remain; lower it if parts of
+          the subject disappear.
+        </p>
+      </div>
+    </section>
+
+    <!-- 3. DIMENSIONS -->
+    <section class="card">
+      <h2>3 · Size &amp; dimensions</h2>
+
+      <div class="field">
+        <span>Units</span>
+        <div class="segmented" id="unitSeg">
+          <button data-unit="px" class="active">pixels</button>
+          <button data-unit="cm">centimetres</button>
+        </div>
+      </div>
+
+      <label class="field" id="dpiField" hidden>
+        <span>Resolution (DPI)</span>
+        <input type="number" id="dpi" value="96" min="1" max="1200">
+      </label>
+
+      <div class="grid2">
+        <label class="field">
+          <span>Width</span>
+          <input type="number" id="wIn" min="1">
+        </label>
+        <label class="field">
+          <span>Height</span>
+          <input type="number" id="hIn" min="1">
+        </label>
+      </div>
+
+      <label class="switch" style="margin-top:2px">
+        <input type="checkbox" id="lockAspect" checked>
+        <span>Lock aspect ratio</span>
+      </label>
+
+      <div class="chips" id="scaleChips">
+        <button data-scale="0.25">25%</button>
+        <button data-scale="0.5">50%</button>
+        <button data-scale="0.75">75%</button>
+        <button data-scale="1">100%</button>
+        <button data-scale="1.5">150%</button>
+        <button data-scale="2">200%</button>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn primary" id="downloadBtn" disabled>Download</button>
+      <button class="btn ghost" id="resetBtn" disabled>Reset</button>
+    </div>
+  </aside>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   ELEMENTS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const dropzone = $('dropzone'), fileInput = $('fileInput'),
+      workspace = $('workspace'), out = $('out'),
+      fileNameEl = $('fileName'), readout = $('readout'),
+      formatEl = $('format'), qualityEl = $('quality'), qualityVal = $('qualityVal'),
+      qualityField = $('qualityField'), targetKB = $('targetKB'), fitBtn = $('fitBtn'),
+      removeBgEl = $('removeBg'), bgOpts = $('bgOpts'),
+      tolEl = $('tolerance'), tolVal = $('tolVal'),
+      featherEl = $('feather'), featherVal = $('featherVal'),
+      unitSeg = $('unitSeg'), dpiField = $('dpiField'), dpiEl = $('dpi'),
+      wIn = $('wIn'), hIn = $('hIn'), lockAspect = $('lockAspect'),
+      scaleChips = $('scaleChips'),
+      downloadBtn = $('downloadBtn'), resetBtn = $('resetBtn'),
+      changeBtn = $('changeBtn'), toastEl = $('toast');
+
+const ctx = out.getContext('2d');
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const FORMATS = {
+  png:  { mime:'image/png',  ext:'png',  lossy:false },
+  jpeg: { mime:'image/jpeg', ext:'jpg',  lossy:true  },
+  webp: { mime:'image/webp', ext:'webp', lossy:true  },
+};
+
+const state = {
+  src: null,            // canvas holding the untouched original
+  natW: 0, natH: 0,     // natural size
+  outW: 0, outH: 0,     // output size in px
+  unit: 'px',
+  dpi: 96,
+  format: 'png',
+  quality: 0.92,
+  removeBg: false,
+  tolerance: 35,
+  feather: 1,
+  name: 'image',
+};
+
+let bgCache = { key: '', canvas: null };
+let exportTimer = null;
+let lastUrl = null;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+function toast(msg, ms = 2600){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toastEl.classList.remove('show'), ms);
+}
+
+function formatBytes(b){
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(2) + ' MB';
+}
+
+const pxToUnit = px => state.unit === 'px' ? px : (px / state.dpi * 2.54);
+const unitToPx = v  => state.unit === 'px' ? v  : (v / 2.54 * state.dpi);
+
+/* ============================================================
+   BACKGROUND REMOVAL
+   Flood-fill from every border pixel + edge feathering.
+   ============================================================ */
+function blurMask(mask, w, h, radius){
+  const r = Math.max(1, Math.round(radius));
+  const win = r * 2 + 1;
+  const a = new Uint8Array(mask);
+  const b = new Uint8Array(w * h);
+
+  // horizontal
+  for (let y = 0; y < h; y++){
+    const off = y * w;
+    let sum = 0;
+    for (let k = -r; k <= r; k++) sum += a[off + clamp(k, 0, w - 1)];
+    for (let x = 0; x < w; x++){
+      b[off + x] = sum / win;
+      sum += a[off + clamp(x + r + 1, 0, w - 1)] - a[off + clamp(x - r, 0, w - 1)];
+    }
+  }
+  // vertical (b -> a)
+  for (let x = 0; x < w; x++){
+    let sum = 0;
+    for (let k = -r; k <= r; k++) sum += b[clamp(k, 0, h - 1) * w + x];
+    for (let y = 0; y < h; y++){
+      a[y * w + x] = sum / win;
+      sum += b[clamp(y + r + 1, 0, h - 1) * w + x] - b[clamp(y - r, 0, h - 1) * w + x];
+    }
+  }
+  return a;
+}
+
+function removeBackground(srcCanvas, tolerance, feather){
+  const w = srcCanvas.width, h = srcCanvas.height;
+
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cctx = c.getContext('2d', { willReadFrequently: true });
+  cctx.drawImage(srcCanvas, 0, 0);
+
+  const img = cctx.getImageData(0, 0, w, h);
+  const d = img.data;
+
+  /* --- reference colour = average of the border --- */
+  let R = 0, G = 0, B = 0, n = 0;
+  const addRef = (x, y) => {
+    const i = (y * w + x) * 4;
+    if (d[i + 3] < 8) return;            // ignore already-transparent pixels
+    R += d[i]; G += d[i + 1]; B += d[i + 2]; n++;
+  };
+  for (let x = 0; x < w; x++){ addRef(x, 0); addRef(x, h - 1); }
+  for (let y = 0; y < h; y++){ addRef(0, y); addRef(w - 1, y); }
+  if (n === 0){ R = G = B = 255; } else { R /= n; G /= n; B /= n; }
+
+  /* --- flood fill --- */
+  const T2 = tolerance * tolerance;
+  const mask = new Uint8Array(w * h);     // 255 = background
+  const stack = new Int32Array(w * h);
+  let sp = 0;
+
+  const visit = (idx) => {
+    if (mask[idx]) return;
+    const i = idx * 4;
+    if (d[i + 3] < 8){ mask[idx] = 255; stack[sp++] = idx; return; }
+    const dr = d[i] - R, dg = d[i + 1] - G, db = d[i + 2] - B;
+    if (dr * dr + dg * dg + db * db <= T2){
+      mask[idx] = 255;
+      stack[sp++] = idx;
+    }
+  };
+
+  for (let x = 0; x < w; x++){ visit(x); visit((h - 1) * w + x); }
+  for (let y = 0; y < h; y++){ visit(y * w); visit(y * w + w - 1); }
+
+  while (sp > 0){
+    const idx = stack[--sp];
+    const x = idx % w;
+    const y = (idx - x) / w;
+    if (x > 0)     visit(idx - 1);
+    if (x < w - 1) visit(idx + 1);
+    if (y > 0)     visit(idx - w);
+    if (y < h - 1) visit(idx + w);
+  }
+
+  /* --- feather + apply --- */
+  const m = feather > 0 ? blurMask(mask, w, h, feather) : mask;
+  for (let i = 0, p = 0; i < w * h; i++, p += 4){
+    d[p + 3] = (d[p + 3] * (255 - m[i])) / 255;
+  }
+
+  cctx.putImageData(img, 0, 0);
+  return c;
+}
+
+/* ============================================================
+   RENDER PIPELINE
+   ============================================================ */
+function getBaseCanvas(){
+  if (!state.removeBg) return state.src;
+
+  const key = `${state.tolerance}|${state.feather}|${state.natW}x${state.natH}`;
+  if (bgCache.key !== key){
+    bgCache.canvas = removeBackground(state.src, state.tolerance, state.feather);
+    bgCache.key = key;
+  }
+  return bgCache.canvas;
+}
+
+function render(){
+  if (!state.src) return;
+
+  const w = Math.max(1, Math.round(state.outW));
+  const h = Math.max(1, Math.round(state.outH));
+
+  if (out.width !== w)  out.width = w;
+  if (out.height !== h) out.height = h;
+
+  ctx.clearRect(0, 0, w, h);
+  if (state.format === 'jpeg'){          // JPEG has no alpha channel
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+  }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(getBaseCanvas(), 0, 0, w, h);
+
+  updateReadout();
+  scheduleExport();
+}
+
+function updateReadout(size){
+  const cmW = (state.outW / state.dpi * 2.54).toFixed(2);
+  const cmH = (state.outH / state.dpi * 2.54).toFixed(2);
+  readout.innerHTML =
+    `<b>${Math.round(state.outW)} × ${Math.round(state.outH)} px</b>` +
+    ` · ${cmW} × ${cmH} cm @ ${state.dpi} DPI` +
+    ` · ${state.format.toUpperCase()}` +
+    (size ? ` · <b>${formatBytes(size)}</b>` : ' · …');
+}
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+function exportBlob(q){
+  const fmt = FORMATS[state.format];
+  const quality = q ?? state.quality;
+  return new Promise(resolve => {
+    out.toBlob(b => resolve(b), fmt.mime, fmt.lossy ? quality : undefined);
+  });
+}
+
+function scheduleExport(){
+  clearTimeout(exportTimer);
+  exportTimer = setTimeout(async () => {
+    const blob = await exportBlob();
+    if (blob) updateReadout(blob.size);
+  }, 260);
+}
+
+async function download(){
+  const blob = await exportBlob();
+  if (!blob){ toast('Export failed — try smaller dimensions.'); return; }
+  const fmt = FORMATS[state.format];
+  if (lastUrl) URL.revokeObjectURL(lastUrl);
+  lastUrl = URL.createObjectURL(blob);
+  const a = document.createElemen
