@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PDF to Image</title><link rel="stylesheet" href="css/style.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.mjs" type="module"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html">Image<span>&</span>PDF Toolkit</a></header>
+<main class="container tool-page"><a class="back" href="index.html">← All tools</a>
+<section class="panel"><h1>PDF to Image</h1><label class="dropzone" id="drop"><input id="file" type="file" accept="application/pdf"><strong>Choose or drop a PDF</strong></label>
+<div class="controls"><div class="field"><label>Output</label><select id="format"><option value="png">PNG</option><option value="jpeg">JPG</option></select></div><div class="field"><label>Scale</label><input id="scale" type="number" min=".5" max="4" step=".25" value="1.5"></div></div>
+<button class="btn" id="go" disabled>Convert Pages</button><div id="status"></div><div id="results" class="result-grid"></div></section>
+</main>
+<footer>Image & PDF Toolkit</footer><script type="module" src="js/features/pdf-to-image.js"></script></body></html>

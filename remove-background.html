@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Remove Background</title><link rel="stylesheet" href="css/style.css"><script type="importmap">{"imports":{"@imgly/background-removal":"https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm"}}</script></head>
+<body><header class="site-header"><a class="brand" href="index.html">Image<span>&</span>PDF Toolkit</a></header>
+<main class="container tool-page"><a class="back" href="index.html">← All tools</a>
+<section class="panel"><h1>Remove Image Background</h1><p class="muted">Uses the browser-based IMG.LY background-removal model. The first run downloads the model.</p>
+<label class="dropzone" id="drop"><input id="file" type="file" accept="image/*"><strong>Choose or drop an image</strong></label>
+<div class="actions"><button class="btn" id="go" disabled>Remove Background</button></div><div id="status"></div><img id="preview" class="preview hidden"><a id="download" class="btn hidden">Download PNG</a></section>
+</main>
+<footer>Image & PDF Toolkit</footer><script type="module" src="js/features/remove-background.js"></script></body></html>

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Image Size</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="site-header"><a class="brand" href="index.html">Image<span>&</span>PDF Toolkit</a></header>
+<main class="container tool-page"><a class="back" href="index.html">← All tools</a>
+<section class="panel"><h1>Reduce / Increase Image Size</h1><p class="muted">The tool searches for JPEG quality and dimensions that get close to your target size. Exact size is not always possible without adding padding.</p>
+<label class="dropzone" id="drop"><input id="file" type="file" accept="image/*"><strong>Choose or drop an image</strong></label>
+<div id="controls" class="hidden"><div class="controls"><div class="field"><label>Target size (KB)</label><input id="target" type="number" min="1" value="100"></div><div class="field"><label>Format</label><select id="format"><option value="image/jpeg">JPG / JPEG</option><option value="image/png">PNG</option></select></div></div><button class="btn" id="go">Create Target Size</button></div>
+<img id="preview" class="preview hidden"><div id="status"></div></section>
+</main>
+<footer>Image & PDF Toolkit</footer><script type="module" src="js/features/image-size.js"></script></body></html>

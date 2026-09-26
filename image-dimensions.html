@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Set Image Dimensions</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="site-header"><a class="brand" href="index.html">Image<span>&</span>PDF Toolkit</a></header>
+<main class="container tool-page"><a class="back" href="index.html">← All tools</a>
+<section class="panel"><h1>Set Image Dimensions</h1><p class="muted">Choose pixels or centimetres. For centimetres, 96 DPI is used for the pixel conversion.</p>
+<label class="dropzone" id="drop"><input id="file" type="file" accept="image/*"><strong>Choose or drop an image</strong><span class="muted">JPG, JPEG, PNG, WebP and other browser-supported images</span></label>
+<div id="controls" class="hidden"><div class="controls"><div class="field"><label>Unit</label><select id="unit"><option value="px">Pixels</option><option value="cm">Centimetres</option></select></div><div class="field"><label>Width</label><input id="w" type="number" min="1"></div><div class="field"><label>Height</label><input id="h" type="number" min="1"></div></div>
+<label class="check"><input id="lock" type="checkbox" checked> Keep aspect ratio</label><div class="actions"><button class="btn" id="go">Resize & Download</button></div></div>
+<img id="preview" class="preview hidden"><div id="status"></div></section>
+</main>
+<footer>Image & PDF Toolkit</footer><script type="module" src="js/features/dimensions.js"></script></body></html>

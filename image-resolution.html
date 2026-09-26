@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Image Resolution</title><link rel="stylesheet" href="css/style.css"></head>
+<body><header class="site-header"><a class="brand" href="index.html">Image<span>&</span>PDF Toolkit</a></header>
+<main class="container tool-page"><a class="back" href="index.html">← All tools</a>
+<section class="panel"><h1>Set Image Resolution</h1><p class="muted">This writes print-resolution metadata into a PNG or JPEG. It does not change the number of pixels.</p>
+<label class="dropzone" id="drop"><input id="file" type="file" accept="image/png,image/jpeg"><strong>Choose or drop a JPG/PNG</strong></label>
+<div id="controls" class="hidden"><div class="controls"><div class="field"><label>Resolution (DPI)</label><input id="dpi" type="number" min="1" value="300"></div><div class="field"><label>Output format</label><select id="format"><option value="jpeg">JPEG</option><option value="png">PNG</option></select></div></div><button class="btn" id="go">Set Resolution</button></div>
+<img id="preview" class="preview hidden"><div id="status"></div></section>
+</main>
+<footer>Image & PDF Toolkit</footer><script type="module" src="js/features/image-resolution.js"></script></body></html>
