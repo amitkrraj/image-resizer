@@ -1,0 +1,6 @@
+import { $,filePicker,loadImage,canvasBlob,downloadBlob,safeName,setStatus } from "../common.js";
+const file=$("#file"),drop=$("#drop"),format=$("#format"),quality=$("#quality"),qv=$("#qv"),go=$("#go"),preview=$("#preview"),controls=$("#controls"),qualityBox=$("#qualityBox"),status=$("#status");let src,img;
+filePicker(file,drop,async fs=>{src=fs[0];img=await loadImage(src);preview.src=URL.createObjectURL(src);preview.classList.remove("hidden");controls.classList.remove("hidden")});
+quality.addEventListener("input",()=>qv.textContent=Math.round(quality.value*100)+"%");
+format.addEventListener("change",()=>qualityBox.style.display=format.value==="image/png"?"none":"block");
+go.addEventListener("click",async()=>{try{const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);const b=await canvasBlob(c,format.value,Number(quality.value));downloadBlob(b,safeName(src.name)+(format.value==="image/png"?".png":".jpg"));setStatus(status,"Conversion complete.","success")}catch(e){setStatus(status,e.message,"error")}});

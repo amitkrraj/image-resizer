@@ -1,0 +1,8 @@
+import { $,filePicker,loadImage,canvasBlob,downloadBlob,safeName,setStatus } from "../common.js";
+const file=$("#file"),drop=$("#drop"),target=$("#target"),format=$("#format"),go=$("#go"),preview=$("#preview"),controls=$("#controls"),status=$("#status");let src,img;
+filePicker(file,drop,async fs=>{src=fs[0];img=await loadImage(src);preview.src=URL.createObjectURL(src);preview.classList.remove("hidden");controls.classList.remove("hidden")});
+async function encode(c,type,q){return canvasBlob(c,type,q)}
+go.addEventListener("click",async()=>{try{const targetBytes=Number(target.value)*1024;if(targetBytes<1024)throw Error("Target must be at least 1 KB");let scale=1,c=document.createElement("canvas"),ctx=c.getContext("2d");c.width=img.naturalWidth;c.height=img.naturalHeight;ctx.drawImage(img,0,0);let best=null;
+for(let pass=0;pass<8;pass++){let q=.95;let b=await encode(c,format.value,q);if(b.size<=targetBytes){best=b;break}scale*=.82;c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));ctx.drawImage(img,0,0,c.width,c.height);for(q=.92;q>=.25;q-=.07){b=await encode(c,format.value,q);if(b.size<=targetBytes){best=b;break}}if(best)break}
+if(!best){best=await encode(c,format.value,.25);setStatus(status,"Could not get below the target; downloaded the smallest browser encoding found.","error")}else setStatus(status,`Created ${(best.size/1024).toFixed(1)} KB (target ${target.value} KB).`,"success");
+downloadBlob(best,safeName(src.name)+(format.value==="image/png"?".png":".jpg"));}catch(e){setStatus(status,e.message,"error")}});

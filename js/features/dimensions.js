@@ -1,0 +1,8 @@
+import { $, filePicker, loadImage, canvasBlob, downloadBlob, safeName, setStatus } from "../common.js";
+const file=$("#file"),drop=$("#drop"),w=$("#w"),h=$("#h"),unit=$("#unit"),lock=$("#lock"),go=$("#go"),preview=$("#preview"),controls=$("#controls"),status=$("#status");
+let source, img;
+filePicker(file,drop,async files=>{source=files[0];img=await loadImage(source);preview.src=URL.createObjectURL(source);preview.classList.remove("hidden");controls.classList.remove("hidden");w.value=img.naturalWidth;h.value=img.naturalHeight;});
+w.addEventListener("input",()=>{if(lock.checked && img) h.value=Math.max(1,Math.round(Number(w.value)*img.naturalHeight/img.naturalWidth));});
+h.addEventListener("input",()=>{if(lock.checked && img) w.value=Math.max(1,Math.round(Number(h.value)*img.naturalWidth/img.naturalHeight));});
+unit.addEventListener("change",()=>{if(!img)return; if(unit.value==="cm"){w.value=(img.naturalWidth/96*2.54).toFixed(2);h.value=(img.naturalHeight/96*2.54).toFixed(2)}else{w.value=img.naturalWidth;h.value=img.naturalHeight}});
+go.addEventListener("click",async()=>{try{let W=Number(w.value),H=Number(h.value);if(unit.value==="cm"){W=Math.round(W/2.54*96);H=Math.round(H/2.54*96)}if(W<1||H<1)throw Error("Enter valid dimensions");const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(img,0,0,W,H);downloadBlob(await canvasBlob(c,source.type==="image/png"?"image/png":"image/jpeg",.92),safeName(source.name)+"-"+W+"x"+H+(source.type==="image/png"?".png":".jpg"));setStatus(status,"Image resized successfully.","success")}catch(e){setStatus(status,e.message,"error")}});

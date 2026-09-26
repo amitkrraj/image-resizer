@@ -1,0 +1,5 @@
+import { $,filePicker,downloadBlob,setStatus } from "../common.js";
+import removeBackground from "@imgly/background-removal";
+const file=$("#file"),drop=$("#drop"),go=$("#go"),status=$("#status"),preview=$("#preview"),download=$("#download");let src;
+filePicker(file,drop,fs=>{src=fs[0];go.disabled=false;preview.src=URL.createObjectURL(src);preview.classList.remove("hidden");download.classList.add("hidden")});
+go.addEventListener("click",async()=>{try{go.disabled=true;setStatus(status,"Removing background… first run may take a while.");const blob=await removeBackground(src,{progress:(key,p)=>setStatus(status,`Downloading/processing model: ${Math.round(p*100)}%`)});const url=URL.createObjectURL(blob);preview.src=url;download.href=url;download.download=src.name.replace(/\.[^.]+$/,"")+"-no-background.png";download.classList.remove("hidden");setStatus(status,"Background removed successfully.","success")}catch(e){setStatus(status,"Background removal failed: "+e.message,"error")}finally{go.disabled=false}});
