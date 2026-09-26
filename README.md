@@ -3,12 +3,6 @@
 ## Run
 Because ES modules and browser security work better over HTTP, run a local server from this folder:
 
-### Python
-python -m http.server 8080
-
-Then open:
-http://localhost:8080/
-
 ## Features
 1. Image dimensions — pixels/cm
 2. Image size targeting — approximate KB
